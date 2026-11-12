@@ -25,12 +25,14 @@ else
     echo "note: $OCCT not found, building without STEP support"
 fi
 OBJECTS=()
+PIDS=()
 for src in "${SOURCES[@]}"; do
     obj="$B/obj/$(basename "$src" .cpp).o"
     clang++ "${CXXFLAGS[@]}" -c "$src" -o "$obj" &
+    PIDS+=($!)
     OBJECTS+=("$obj")
 done
-wait
+for pid in "${PIDS[@]}"; do wait "$pid"; done  # stop on the first failed compile
 rm -f "$B/libql3d.a"
 ar -rcs "$B/libql3d.a" "${OBJECTS[@]}"
 

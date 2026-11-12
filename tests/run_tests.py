@@ -184,6 +184,27 @@ def test_step_colors(d):
     assert ok and n == 24 and size == (30, 20, 30) and colors == {"#FF0000": 12, "#0000FF": 12}, out
 
 
+def test_step_cache(d):
+    """A cached STEP load returns the same mesh, and editing the file invalidates the cache."""
+    import shutil
+    cache = os.path.join(d, "cache")
+    os.mkdir(cache)
+    p = os.path.join(d, "cached.step")
+    shutil.copy(os.path.join(ROOT, "tests", "fixtures", "two_boxes.step"), p)
+    env = dict(os.environ, QL3D_CACHE_DIR=cache)
+    run = lambda: subprocess.run([BENCH, p], capture_output=True, text=True, env=env).stdout
+    first = run()
+    if "STEP support was not built" in first:
+        return "skipped (built without OpenCASCADE)"
+    strip = lambda out: re.sub(r"[\d.]+ ms", "", out)
+    assert len(os.listdir(cache)) == 1, os.listdir(cache)
+    assert strip(run()) == strip(first) and "24 tris" in first, first
+    # Corrupt the source but keep the cache: a changed file must not be served from the old entry.
+    with open(p, "w") as f:
+        f.write("not a step file")
+    assert "FAIL" in run()
+
+
 def test_invalid_files_fail_cleanly(d):
     for name, data in (("garbage.3mf", b"not a zip"), ("empty.obj", b"# nothing\n"), ("garbage.step", b"hello"),
                        ("short.stl", b"abc")):

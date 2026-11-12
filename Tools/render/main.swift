@@ -14,7 +14,7 @@ do {
     let model = try SceneBuilder.build(url: URL(fileURLWithPath: args[1]))
     let loaded = Date()
     model.scene.background.contents = NSColor(white: 0.92, alpha: 1)
-    let renderer = SCNRenderer(device: MTLCreateSystemDefaultDevice(), options: nil)
+    let renderer = SCNRenderer(device: SceneBuilder.device, options: nil)
     renderer.scene = model.scene
     renderer.pointOfView = model.cameraNode
     let image = renderer.snapshot(atTime: 0, with: CGSize(width: 1200, height: 800), antialiasingMode: .multisampling4X)

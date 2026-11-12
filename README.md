@@ -25,7 +25,9 @@ For STEP, colors assigned to assemblies, parts, solids and individual faces are 
 
 Meshes are parsed by purpose-built code rather than general XML/geometry libraries, and large 3MF files are decompressed and parsed in parallel. On an Apple Silicon laptop, a 3MF holding 234 MB of XML (3.4 million triangles) loads in about a quarter of a second.
 
-STEP files hold exact surfaces rather than triangles, so they are converted with [OpenCASCADE](https://dev.opencascade.org) and take longer: typically 0.1–2 seconds.
+Mesh data is handed to the GPU in place, without copying, so the first frame of even a multi-million-triangle model appears quickly.
+
+STEP files hold exact surfaces rather than triangles, so they are converted with [OpenCASCADE](https://dev.opencascade.org) and take longer the first time: typically 0.1–2 seconds. The converted mesh is cached, so reopening an unchanged STEP file is instant. The cache lives in the extension's own sandbox container (`~/Library/Containers/com.local.quicklook3d.preview/Data/Library/Caches/meshes`) and is capped at 512 MB, oldest entries removed first.
 
 ## Requirements
 

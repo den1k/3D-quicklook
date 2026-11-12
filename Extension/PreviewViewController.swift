@@ -42,7 +42,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     private var modelView: ModelView { view as! ModelView }
 
     override func loadView() {
-        let v = ModelView(frame: NSRect(x: 0, y: 0, width: 900, height: 650))
+        let v = ModelView(frame: NSRect(x: 0, y: 0, width: 900, height: 650),
+                          options: [SCNView.Option.preferredDevice.rawValue: SceneBuilder.device])
         v.allowsCameraControl = true
         v.antialiasingMode = .multisampling4X
         v.backgroundColor = NSColor(name: nil) { appearance in
@@ -52,7 +53,16 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         view = v
     }
 
+    /// Points the loader's mesh cache at this extension's own Caches folder (inside its sandbox container).
+    private static let cacheConfigured: Void = {
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
+        let dir = caches.appendingPathComponent("meshes")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        ql3d_set_cache_dir(dir.path)
+    }()
+
     func preparePreviewOfFile(at url: URL, completionHandler handler: @escaping (Error?) -> Void) {
+        _ = Self.cacheConfigured
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 let model = try SceneBuilder.build(url: url)

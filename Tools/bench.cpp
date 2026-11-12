@@ -2,10 +2,12 @@
 #include "../Core/ql3d.h"
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <map>
 #include <cstring>
 
 int main(int argc, char **argv) {
+    if (const char *dir = getenv("QL3D_CACHE_DIR")) ql3d_set_cache_dir(dir);  // lets tests exercise the mesh cache
     for (int i = 1; i < argc; i++) {
         QL3DMesh m;
         auto t0 = std::chrono::steady_clock::now();

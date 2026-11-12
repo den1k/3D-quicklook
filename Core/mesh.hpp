@@ -46,12 +46,19 @@ struct Mesh {
     size_t n = 0, cap = 0;  // in vertices
     bool zUp = true;
 
+    // Buffers are page-aligned and padded to whole pages so the GPU can use them in place (no copy).
+    static void *growPaged(void *old, size_t oldBytes, size_t newBytes) {
+        const size_t page = 16384;
+        void *p = aligned_alloc(page, (newBytes + page - 1) / page * page);
+        if (old) { memcpy(p, old, oldBytes); free(old); }
+        return p;
+    }
     void reserve(size_t v) {
         if (v <= cap) return;
+        pos = (float *)growPaged(pos, n * 12, v * 12);
+        nrm = (float *)growPaged(nrm, n * 12, v * 12);
+        col = (uint8_t *)growPaged(col, n * 4, v * 4);
         cap = v;
-        pos = (float *)realloc(pos, cap * 12);
-        nrm = (float *)realloc(nrm, cap * 12);
-        col = (uint8_t *)realloc(col, cap * 4);
     }
     void resize(size_t v) { reserve(v); n = v; }
     void grow() { if (n + 3 > cap) reserve(cap ? cap * 2 : 3 * 4096); }
