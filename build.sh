@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 TARGET=arm64-apple-macos13.0
-OCCT=third_party/occt          # optional: OpenCASCADE install prefix, enables STEP
+OCCT=${QL3D_OCCT:-third_party/occt}  # optional: OpenCASCADE install prefix, enables STEP
 B=build
 APP="$B/QuickLook3D.app"
 APPEX="$APP/Contents/PlugIns/QL3DPreview.appex"
@@ -20,7 +20,15 @@ LIBS=(-lc++ -lcompression)
 if [ -d "$OCCT/lib" ]; then
     CXXFLAGS+=(-DQL3D_WITH_STEP "-I$(echo "$OCCT"/include/opencascade)")
     SOURCES+=(Core/step.cpp)
-    LIBS+=("$OCCT"/lib/libTK*.a)
+    if ls "$OCCT"/lib/libTK*.a >/dev/null 2>&1; then
+        LIBS+=("$OCCT"/lib/libTK*.a)
+    else  # shared libraries (e.g. Homebrew's opencascade): link by name, keep only the ones used
+        LIBS+=("-L$OCCT/lib" -Xlinker -dead_strip_dylibs)
+        for lib in "$OCCT"/lib/libTK*.dylib; do
+            name=$(basename "$lib" .dylib)
+            case "$name" in *.*) ;; *) LIBS+=("-l${name#lib}") ;; esac
+        done
+    fi
 else
     echo "note: $OCCT not found, building without STEP support"
 fi
@@ -61,22 +69,5 @@ codesign --force --sign - "$APP"
 echo "built $APP"
 
 if [ "${1:-}" = "install" ]; then
-    DEST="$HOME/Applications/QuickLook3D.app"
-    mkdir -p "$HOME/Applications"
-    rm -rf "$DEST"
-    cp -R "$APP" "$DEST"
-    LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
-    # Replacing the bundle makes macOS drop the old registration asynchronously, which can
-    # land after ours. Register, then confirm it stuck, retrying if it did not.
-    registered=""
-    for _ in 1 2 3 4 5; do
-        "$LSREGISTER" -f -R "$DEST"
-        pluginkit -a "$DEST/Contents/PlugIns/QL3DPreview.appex"
-        sleep 2
-        if pluginkit -m -A -i com.local.quicklook3d.preview | grep -q quicklook3d; then registered=1; break; fi
-    done
-    [ -n "$registered" ] || { echo "error: macOS did not register the extension" >&2; exit 1; }
-    pluginkit -e use -i com.local.quicklook3d.preview
-    qlmanage -r >/dev/null 2>&1 || true
-    echo "installed $DEST"
+    scripts/install.sh "$APP"
 fi

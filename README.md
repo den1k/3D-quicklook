@@ -29,13 +29,25 @@ Mesh data is handed to the GPU in place, without copying, so the first frame of 
 
 STEP files hold exact surfaces rather than triangles, so they are converted with [OpenCASCADE](https://dev.opencascade.org) and take longer the first time: typically 0.1–2 seconds. The converted mesh is cached, so reopening an unchanged STEP file is instant. The cache lives in the extension's own sandbox container (`~/Library/Containers/com.local.quicklook3d.preview/Data/Library/Caches/meshes`) and is capped at 512 MB, oldest entries removed first.
 
-## Requirements
+## Install with Homebrew
+
+```bash
+brew tap den1k/quicklook3d https://github.com/den1k/3D-quicklook
+brew install quicklook3d
+quicklook3d-setup
+```
+
+Homebrew builds the app from source on your Mac (about 20 seconds, using Homebrew's OpenCASCADE for STEP). `quicklook3d-setup` copies it to `~/Applications` and turns the extension on; run it again after an upgrade.
+
+## Build from source
+
+### Requirements
 
 - macOS 13 or later, Apple Silicon
 - Xcode (for `swiftc` and `clang++`)
 - `git` and `cmake`, only for STEP support
 
-## Build and install
+### Build and install
 
 ```bash
 # Optional, once: build OpenCASCADE for STEP support (takes 10-20 minutes)
@@ -86,4 +98,8 @@ Two command-line tools are built alongside the app:
 - OBJ textures are not shown, only material and vertex colors.
 - Pure black parts are drawn as very dark gray so their shape stays visible.
 - There is no thumbnail extension; Finder icons are unchanged.
-- OpenCASCADE is linked statically and is licensed under the LGPL 2.1 with an additional exception.
+- OpenCASCADE is licensed under the LGPL 2.1 with an additional exception. `scripts/build-occt.sh` links it statically; the Homebrew build links Homebrew's shared libraries.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
