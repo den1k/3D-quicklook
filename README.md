@@ -33,6 +33,7 @@ STEP files hold exact surfaces rather than triangles, so they are converted with
 
 ```bash
 brew tap den1k/quicklook3d https://github.com/den1k/3D-quicklook
+brew trust den1k/quicklook3d   # recent Homebrew versions ask for this before using a third-party tap
 brew install quicklook3d
 quicklook3d-setup
 ```
