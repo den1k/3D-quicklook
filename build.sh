@@ -14,8 +14,9 @@ APPEX="$APP/Contents/PlugIns/QL3DPreview.appex"
 mkdir -p "$B/obj"
 
 # --- C++ loading core -------------------------------------------------------
-CXXFLAGS=(-std=c++17 -O2 -Wall -Wextra -target "$TARGET" -fapplication-extension)
-SOURCES=(Core/loader.cpp Core/stl.cpp Core/obj.cpp Core/threemf.cpp)
+CXXFLAGS=(-std=c++17 -O2 -DNDEBUG -Wall -Wextra -target "$TARGET" -fapplication-extension)
+SOURCES=(Core/loader.cpp Core/stl.cpp Core/obj.cpp Core/threemf.cpp Core/ply.cpp Core/gltf.cpp
+         Core/meshopt/vertexcodec.cpp Core/meshopt/indexcodec.cpp Core/meshopt/vertexfilter.cpp)
 LIBS=(-lc++ -lcompression)
 if [ -d "$OCCT/lib" ]; then
     CXXFLAGS+=(-DQL3D_WITH_STEP "-I$(echo "$OCCT"/include/opencascade)")

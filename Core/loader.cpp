@@ -161,6 +161,8 @@ int ql3d_load(const char *path, QL3DMesh *out) {
     if (ext == "stl") ok = loadSTL(path, m, err);
     else if (ext == "obj") ok = loadOBJ(path, m, err);
     else if (ext == "3mf") ok = load3MF(path, m, err);
+    else if (ext == "ply") ok = loadPLY(path, m, err);
+    else if (ext == "glb" || ext == "gltf") ok = loadGLTF(path, m, err);
     else if (ext == "step" || ext == "stp") {
         std::string cached = cachePath(path);
         ok = !cached.empty() && readCache(cached, m);

@@ -13,7 +13,7 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -38,6 +38,9 @@
 				<string>com.local.quicklook3d.step</string>
 				<string>public.standard-tesselated-geometry-format</string>
 				<string>public.geometry-definition-format</string>
+				<string>public.polygon-file-format</string>
+				<string>org.khronos.glb</string>
+				<string>org.khronos.gltf</string>
 				<!-- Types other apps (Bambu Studio, QuickLookStep) declare for the same extensions. -->
 				<string>com.bambulab.3mf</string>
 				<string>com.bambulab.step</string>

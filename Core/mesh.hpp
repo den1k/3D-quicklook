@@ -140,5 +140,7 @@ bool loadSTL(const char *path, Mesh &out, std::string &err);
 bool loadOBJ(const char *path, Mesh &out, std::string &err);
 bool load3MF(const char *path, Mesh &out, std::string &err);
 bool loadSTEP(const char *path, Mesh &out, std::string &err);
+bool loadPLY(const char *path, Mesh &out, std::string &err);
+bool loadGLTF(const char *path, Mesh &out, std::string &err);
 
 }  // namespace ql3d

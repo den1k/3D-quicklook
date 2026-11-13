@@ -3,6 +3,8 @@
 
 Run ./build.sh first, then: python3 tests/run_tests.py
 """
+import base64
+import json
 import os
 import re
 import struct
@@ -90,6 +92,86 @@ def test_obj_vertex_colors(d):
     write(p, "v 0 0 0 0 1 0\nv 1 0 0 0 1 0\nv 0 1 0 0 1 0\nf 1 2 3\n")
     ok, n, _, colors, out = load(p)
     assert ok and n == 1 and colors == {"#00FF00": 1}, out
+
+
+def test_ply_ascii_vertex_colors(d):
+    p = os.path.join(d, "tetra_ascii.ply")
+    head = ("ply\nformat ascii 1.0\ncomment test\nelement vertex 4\nproperty float x\nproperty float y\nproperty float z\n"
+            "property uchar red\nproperty uchar green\nproperty uchar blue\n"
+            "element face 2\nproperty list uchar int vertex_indices\nend_header\n")
+    v = "".join(f"{x} {y} {z} 0 255 0\n" for x, y, z in VERTS)
+    # One quad (two triangles) and one triangle.
+    write(p, head + v + "4 0 1 3 2\n3 0 2 1\n")
+    ok, n, size, colors, out = load(p)
+    assert ok and n == 3 and size == (10, 10, 10) and colors == {"#00FF00": 3}, out
+
+
+def test_ply_binary_big_endian_face_colors(d):
+    p = os.path.join(d, "tetra_be.ply")
+    head = ("ply\nformat binary_big_endian 1.0\nelement vertex 4\nproperty double x\nproperty double y\nproperty double z\n"
+            "property float quality\nelement face 4\nproperty list uchar uint vertex_index\n"
+            "property uchar red\nproperty uchar green\nproperty uchar blue\nend_header\n")
+    with open(p, "wb") as f:
+        f.write(head.encode())
+        for v in VERTS:
+            f.write(struct.pack(">3df", *v, 0.5))
+        for i, t in enumerate(TRIS):
+            f.write(struct.pack(">B3I3B", 3, *t, *((255, 0, 0) if i < 2 else (0, 0, 255))))
+    ok, n, size, colors, out = load(p)
+    assert ok and n == 4 and size == (10, 10, 10) and colors == {"#FF0000": 2, "#0000FF": 2}, out
+
+
+def gltf_doc(buffer):
+    """Two tetrahedra: one red by material, one moved, doubled in size and green by vertex color."""
+    data = (b"".join(struct.pack("<3f", *v) for v in VERTS) + b"".join(struct.pack("<3H", *t) for t in TRIS)
+            + bytes([0, 255, 0, 255] * 4))
+    doc = {
+        "asset": {"version": "2.0"}, "scene": 0, "scenes": [{"nodes": [0, 1]}],
+        "nodes": [{"mesh": 0}, {"mesh": 1, "translation": [20, 0, 0], "scale": [2, 2, 2]}],
+        "meshes": [{"primitives": [{"attributes": {"POSITION": 0}, "indices": 1, "material": 0}]},
+                   {"primitives": [{"attributes": {"POSITION": 0, "COLOR_0": 2}, "indices": 1}]}],
+        "materials": [{"pbrMetallicRoughness": {"baseColorFactor": [1, 0, 0, 1]}}],
+        "buffers": [dict(buffer, byteLength=len(data))],
+        "bufferViews": [{"buffer": 0, "byteOffset": 0, "byteLength": 48}, {"buffer": 0, "byteOffset": 48, "byteLength": 24},
+                        {"buffer": 0, "byteOffset": 72, "byteLength": 16}],
+        "accessors": [{"bufferView": 0, "componentType": 5126, "count": 4, "type": "VEC3"},
+                      {"bufferView": 1, "componentType": 5123, "count": 12, "type": "SCALAR"},
+                      {"bufferView": 2, "componentType": 5121, "normalized": True, "count": 4, "type": "VEC4"}],
+    }
+    return doc, data
+
+
+def check_gltf(p):
+    ok, n, size, colors, out = load(p)
+    assert ok and n == 8 and size == (40, 20, 20) and colors == {"#FF0000": 4, "#00FF00": 4}, out
+
+
+def test_glb(d):
+    p = os.path.join(d, "tetra.glb")
+    doc, data = gltf_doc({})
+    j = json.dumps(doc).encode()
+    j += b" " * (-len(j) % 4)
+    with open(p, "wb") as f:
+        f.write(b"glTF" + struct.pack("<II", 2, 28 + len(j) + len(data)))
+        f.write(struct.pack("<II", len(j), 0x4E4F534A) + j + struct.pack("<II", len(data), 0x004E4942) + data)
+    check_gltf(p)
+
+
+def test_glb_meshopt_compressed(d):
+    ok, n, size, colors, out = load(os.path.join(ROOT, "tests", "fixtures", "tetra_meshopt.glb"))
+    assert ok and n == 4 and size == (10, 10, 10) and colors == {"#FF0000": 4}, out
+
+
+def test_gltf_external_and_embedded_buffers(d):
+    doc, data = gltf_doc({"uri": "tetra%20data.bin"})
+    with open(os.path.join(d, "tetra data.bin"), "wb") as f:
+        f.write(data)
+    write(os.path.join(d, "external.gltf"), json.dumps(doc, indent=2))
+    check_gltf(os.path.join(d, "external.gltf"))
+    doc, data = gltf_doc({})
+    doc["buffers"][0]["uri"] = "data:application/octet-stream;base64," + base64.b64encode(data).decode()
+    write(os.path.join(d, "embedded.gltf"), json.dumps(doc))
+    check_gltf(os.path.join(d, "embedded.gltf"))
 
 
 def test_3mf_color_groups(d):
@@ -207,7 +289,8 @@ def test_step_cache(d):
 
 def test_invalid_files_fail_cleanly(d):
     for name, data in (("garbage.3mf", b"not a zip"), ("empty.obj", b"# nothing\n"), ("garbage.step", b"hello"),
-                       ("short.stl", b"abc")):
+                       ("short.stl", b"abc"), ("garbage.ply", b"ply\nnope"), ("garbage.glb", b"glTF\x02\0\0\0"),
+                       ("garbage.gltf", b"{\"meshes\": [")):
         p = os.path.join(d, name)
         with open(p, "wb") as f:
             f.write(data)

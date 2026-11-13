@@ -6,6 +6,8 @@ A macOS Quick Look extension that previews 3D model files when you press Space i
 - **STEP** (`.step`, `.stp`) — with part and face colors
 - **STL** — binary and ASCII
 - **OBJ** — with material colors (`.mtl`) and vertex colors
+- **glTF** (`.glb`, `.gltf`) — with material colors and vertex colors, including meshopt-compressed files
+- **PLY** — binary and ASCII, with vertex and face colors
 
 The preview is interactive: drag to rotate, pinch or use the mouse wheel to zoom, two-finger scroll to pan, double-click to reset the view.
 
@@ -75,7 +77,7 @@ If another app's Quick Look extension claims the same file types, macOS may pick
 python3 tests/run_tests.py
 ```
 
-The tests generate small STL, OBJ and 3MF files (including slicer-style multicolor ones), load them and the STEP fixture in `tests/fixtures`, and check triangle counts, sizes and colors.
+The tests generate small STL, OBJ, PLY, glTF and 3MF files (including slicer-style multicolor ones), load them and the STEP and compressed-GLB fixtures in `tests/fixtures`, and check triangle counts, sizes and colors.
 
 Two command-line tools are built alongside the app:
 
@@ -86,7 +88,7 @@ Two command-line tools are built alongside the app:
 
 | Path | Contents |
 | --- | --- |
-| `Core/` | C++ loaders (`stl.cpp`, `obj.cpp`, `threemf.cpp`, `step.cpp`) behind a small C interface, `ql3d.h` |
+| `Core/` | C++ loaders (`stl.cpp`, `obj.cpp`, `ply.cpp`, `gltf.cpp`, `threemf.cpp`, `step.cpp`) behind a small C interface, `ql3d.h` |
 | `Shared/SceneBuilder.swift` | turns a loaded mesh into a SceneKit scene |
 | `Extension/` | the Quick Look preview extension |
 | `App/` | the host app that carries the extension |
@@ -96,9 +98,12 @@ Two command-line tools are built alongside the app:
 
 - The build is ad-hoc signed, which is enough to run on the Mac that built it. Distributing a built app to other Macs needs a Developer ID signature and notarization.
 - The extension is sandboxed but has read-only access to the file system, because a sandboxed previewer otherwise cannot read the `.mtl` file next to an `.obj`.
-- OBJ textures are not shown, only material and vertex colors.
+- OBJ and glTF textures are not shown, only material and vertex colors. A textured glTF material is drawn in the default gray.
+- glTF files compressed with Draco are not supported (meshopt compression is), and animations and skinning are ignored.
+- PLY point clouds (files without faces) are not supported. PLY has no fixed up axis; Z is assumed to be up, as for STL.
 - Pure black parts are drawn as very dark gray so their shape stays visible.
 - There is no thumbnail extension; Finder icons are unchanged.
+- `Core/meshopt/` holds the decoder from [meshoptimizer](https://github.com/zeux/meshoptimizer) v1.3 (MIT, license included there).
 - OpenCASCADE is licensed under the LGPL 2.1 with an additional exception. `scripts/build-occt.sh` links it statically; the Homebrew build links Homebrew's shared libraries.
 
 ## License
