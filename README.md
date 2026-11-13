@@ -9,6 +9,17 @@ A macOS Quick Look extension that previews 3D model files when you press Space i
 
 The preview is interactive: drag to rotate, pinch or use the mouse wheel to zoom, two-finger scroll to pan, double-click to reset the view.
 
+## Install with Homebrew
+
+```bash
+brew tap den1k/quicklook3d https://github.com/den1k/3D-quicklook
+brew trust den1k/quicklook3d   # recent Homebrew versions ask for this before using a third-party tap
+brew install quicklook3d
+quicklook3d-setup
+```
+
+Homebrew builds the app from source on your Mac (about 20 seconds, using Homebrew's OpenCASCADE for STEP). `quicklook3d-setup` copies it to `~/Applications` and turns the extension on; run it again after an upgrade.
+
 ## Multicolor support
 
 For 3MF the loader understands:
@@ -28,17 +39,6 @@ Meshes are parsed by purpose-built code rather than general XML/geometry librari
 Mesh data is handed to the GPU in place, without copying, so the first frame of even a multi-million-triangle model appears quickly.
 
 STEP files hold exact surfaces rather than triangles, so they are converted with [OpenCASCADE](https://dev.opencascade.org) and take longer the first time: typically 0.1–2 seconds. The converted mesh is cached, so reopening an unchanged STEP file is instant. The cache lives in the extension's own sandbox container (`~/Library/Containers/com.local.quicklook3d.preview/Data/Library/Caches/meshes`) and is capped at 512 MB, oldest entries removed first.
-
-## Install with Homebrew
-
-```bash
-brew tap den1k/quicklook3d https://github.com/den1k/3D-quicklook
-brew trust den1k/quicklook3d   # recent Homebrew versions ask for this before using a third-party tap
-brew install quicklook3d
-quicklook3d-setup
-```
-
-Homebrew builds the app from source on your Mac (about 20 seconds, using Homebrew's OpenCASCADE for STEP). `quicklook3d-setup` copies it to `~/Applications` and turns the extension on; run it again after an upgrade.
 
 ## Build from source
 
