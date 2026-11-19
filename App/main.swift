@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let label = NSTextField(wrappingLabelWithString:
-            "3D Quick Look is installed.\n\nSelect a .3mf, .step, .stp, .stl or .obj file in Finder and press Space.\n\n"
+            "3D Quick Look is installed.\n\nSelect a 3MF, STEP, STL, OBJ, glTF/GLB or PLY file in Finder and press Space.\n\n"
             + "Drag to rotate, pinch or scroll wheel to zoom, two-finger scroll to pan, double-click to reset.")
         label.alignment = .center
         label.frame = NSRect(x: 30, y: 30, width: 400, height: 140)

@@ -11,7 +11,19 @@ A macOS Quick Look extension that previews 3D model files when you press Space i
 
 The preview is interactive: drag to rotate, pinch or use the mouse wheel to zoom, two-finger scroll to pan, double-click to reset the view.
 
-## Install with Homebrew
+## Install
+
+### Download
+
+Get `QuickLook3D-<version>.dmg` from the [latest release](https://github.com/den1k/3D-quicklook/releases/latest), open it, drag **QuickLook3D** to Applications and open it once. Apple Silicon only.
+
+The app is not notarized by Apple, so macOS blocks it the first time. Either approve it under System Settings → Privacy & Security → **Open Anyway**, or clear the download flag before opening:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/QuickLook3D.app
+```
+
+### Homebrew
 
 ```bash
 brew tap den1k/quicklook3d https://github.com/den1k/3D-quicklook
@@ -96,7 +108,7 @@ Two command-line tools are built alongside the app:
 
 ## Notes and limits
 
-- The build is ad-hoc signed, which is enough to run on the Mac that built it. Distributing a built app to other Macs needs a Developer ID signature and notarization.
+- The build is ad-hoc signed, not notarized. That is enough on the Mac that built it; on other Macs the downloaded app has to be approved once (see Install). `scripts/make-dmg.sh` builds the release disk image.
 - The extension is sandboxed but has read-only access to the file system, because a sandboxed previewer otherwise cannot read the `.mtl` file next to an `.obj`.
 - OBJ and glTF textures are not shown, only material and vertex colors. A textured glTF material is drawn in the default gray.
 - glTF files compressed with Draco are not supported (meshopt compression is), and animations and skinning are ignored.
