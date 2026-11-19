@@ -1,8 +1,8 @@
 class Quicklook3d < Formula
   desc "Quick Look previews for 3MF, STEP, STL, OBJ, glTF and PLY files"
   homepage "https://github.com/den1k/3D-quicklook"
-  url "https://github.com/den1k/3D-quicklook/archive/refs/tags/v1.1.0.tar.gz"
-  sha256 "0360d4d4b485a3009ddd13075370997a159685d9fab77bb17b1c0afb259b8ade"
+  url "https://github.com/den1k/3D-quicklook/archive/refs/tags/v1.1.1.tar.gz"
+  sha256 "00e6315ae72dd839812f9ac8220d9280c61c01f05531fa7911404a262a0afb61"
   license "MIT"
   head "https://github.com/den1k/3D-quicklook.git", branch: "main"
 
